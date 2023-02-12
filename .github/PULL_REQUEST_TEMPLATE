@@ -1,0 +1,19 @@
+## Related Task
+## Changes
+
+- Item 1
+- Item 2
+- Item 3
+
+## Testing
+
+- [ ] Deploy to staging
+- [ ] Manually QA update
+- [ ] Get approval from stakeholder
+- [ ] Determine production deploy timing
+
+## Production Ready
+
+- [ ] Deploy to production
+- [ ] Sanity check on production
+- [ ] Monitor logs for errors

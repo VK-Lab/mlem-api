@@ -1,0 +1,52 @@
+{
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "target": "ES2019",
+    "outDir": "dist",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "incremental": true,
+    "declaration": true,
+    "newLine": "lf",
+    "strict": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "removeComments": true,
+    "sourceMap": true,
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": "./",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@app/aws": [
+        "libs/aws/src"
+      ],
+      "@app/aws/*": [
+        "libs/aws/src/*"
+      ]
+    },
+    "typeRoots": [
+      "./typings/*"
+    ]
+  },
+  "include": [
+    "src/**/*",
+    "typings/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/dist/**"
+  ]
+}
