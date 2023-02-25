@@ -6,10 +6,8 @@ import {
   Body,
   UseInterceptors,
   Req,
-  Session,
 } from '@nestjs/common';
 import { ApiExcludeEndpoint, ApiTags } from '@nestjs/swagger';
-import { generateNonce, SiweMessage } from 'siwe';
 
 import {
   AuthService,
@@ -17,7 +15,6 @@ import {
   LoginUserResultDto,
   Payload,
   RegisterUserDto,
-  VerifyPhoneNumberByOtpDto,
   VerifySignatureDto,
 } from '@/auth';
 import { ReqUser } from '@/common';
@@ -54,25 +51,11 @@ export class AuthController {
     return user;
   }
 
-  @Get('nonce')
-  public getSessionId(@Session() session: Record<string, string>): { nonce: string } {
-    session['nonce'] = generateNonce();
-    return {
-      nonce: session['nonce'],
-    };
-  }
-
-  @Post('signature')
-  public async verifySignature(
-    @Body() verifySignatureDto: VerifySignatureDto, @Session() session: Record<string, string>): Promise<SiweMessage> {
-    return this.authService.verifySignature(session['nonce'], verifySignatureDto);
-  }
-
   @Post('login')
   public async login(
-    @Body() verifySignatureDto: VerifySignatureDto, @Session() session: Record<string, string>,
+    @Body() verifySignatureDto: VerifySignatureDto,
   ): Promise<LoginUserResultDto> {
-    return this.authService.loginOrCreate(session['nonce'], verifySignatureDto);
+    return this.authService.loginOrCreate(verifySignatureDto);
   }
 
   @Post('logout')
@@ -91,13 +74,6 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   public async register(@Body() registerUserDto: RegisterUserDto, @ReqUser() user: Payload): Promise<UserIdDto> {
     return this.authService.register(user.userId, registerUserDto);
-  }
-
-  @Post('verify-phone-number')
-  @UseGuards(JwtAuthGuard)
-  public async verifyPhoneNumber(
-    @Body() verifyPhoneNumberByOtpDto: VerifyPhoneNumberByOtpDto, @ReqUser() user: Payload): Promise<UserIdDto> {
-    return this.authService.verifyPhoneNumber(user.userId, verifyPhoneNumberByOtpDto);
   }
 
   @ApiExcludeEndpoint()

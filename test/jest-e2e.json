@@ -12,6 +12,8 @@
   },
   "moduleNameMapper": {
     "@app/aws/(.*)": "<rootDir>/../libs/aws/src/$1",
-    "@app/aws": "<rootDir>/../libs/aws/src"
+    "@app/aws": "<rootDir>/../libs/aws/src",
+    "@libs/casper/(.*)": "<rootDir>/../libs/casper/src/$1",
+    "@libs/casper": "<rootDir>/../libs/casper/src"
   }
 }

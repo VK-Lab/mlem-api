@@ -23,11 +23,6 @@ export class CreateNftCollectionDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  public chainId!: string;
-
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
   public contractType!: string;
 
   @ApiPropertyOptional()

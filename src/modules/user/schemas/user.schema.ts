@@ -18,9 +18,6 @@ export class User {
   })
   public walletAddress!: string;
 
-  @Prop()
-  public chainId!: string;
-
   @Prop({
     trim: true,
   })

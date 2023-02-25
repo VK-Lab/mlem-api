@@ -3,12 +3,10 @@ export const config = {
 
   baseUrl: 'http://localhost:4000/v1',
 
-  jwtSecret: 'PvJjQ52aDBfiRn3jmpg4o31M2sMGOl',
+  jwtSecret: process.env.JWT_SECRET,
 
-  esms: {
-    apiKey: process.env.ESMS_API_KEY,
-    secretKey: process.env.ESMS_SECRET_KEY,
-    smsType: 2,
-    brandName: 'Baotrixemay',
+  casper: {
+    nodeUrl: process.env.NODE_RPC_URL || 'https://node-clarity-testnet.make.services/rpc',
+    networkName: process.env.NETWORK_NAME || 'casper-test',
   },
 };

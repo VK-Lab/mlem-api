@@ -1,18 +1,15 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
-import { EvmChain, EvmNftData } from '@moralisweb3/evm-utils';
 import _ from 'lodash';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, UpdateWriteOpResult } from 'mongoose';
-import moment from 'moment';
+import { CasperCep78Service } from '@libs/casper';
 
-import { GetNftsDto } from './dtos';
 import { Nft, NftDocument } from './schemas';
 import { Erc721Metadata, NftId } from './interfaces';
 import { NftDetailDto } from './dtos/nft-detail.dto';
-import { TelegramService } from './telegram.service';
 
-import { ClaimStatusEnum, ListDto, Logger, MoralisService, PaginationDto } from '@/common';
-import { Benefit, BenefitService } from '@/modules/benefit';
+import { ClaimStatusEnum, ListDto, Logger, PaginationDto } from '@/common';
+import { Benefit } from '@/modules/benefit';
 import { Claim, ClaimService } from '@/modules/claim';
 import { Payload } from '@/auth';
 import { User, UserService } from '@/modules/user';
@@ -20,13 +17,11 @@ import { User, UserService } from '@/modules/user';
 @Injectable()
 export class NftService {
   constructor(
-    private readonly moralisService: MoralisService,
     @InjectModel(Nft.name) private nftModel: Model<NftDocument>,
     private readonly userService: UserService,
     private readonly logger: Logger,
     private readonly claimService: ClaimService,
-    private readonly telegramService: TelegramService,
-    private readonly benefitService: BenefitService,
+    private readonly casperCep78Service: CasperCep78Service,
   ) {
     this.logger.setContext(NftService.name);
   }
@@ -44,7 +39,15 @@ export class NftService {
   }
 
   public async getNft(user: Payload, { tokenAddress, tokenId }: { tokenAddress: string; tokenId: string }): Promise<NftDetailDto> {
-    const { evmNft } = await this.checkOwnedNft(user.userId, { tokenAddress, tokenId });
+    this.casperCep78Service.setContractHash(
+      `hash-${tokenAddress}`,
+      undefined,
+    );
+    const accountHash = await this.casperCep78Service.getOwnerOf(tokenId);
+    const myAccountHash = this.casperCep78Service.accountHashFromHex(user.walletAddress);
+    if (accountHash !== myAccountHash) {
+      throw new BadRequestException('nft_not_found');
+    }
 
     const foundNft = await this.nftModel
       .findOne({ tokenAddress: tokenAddress.toLowerCase(), tokenId })
@@ -68,8 +71,8 @@ export class NftService {
     return {
       ...nftData,
       benefits: <NftDetailDto['benefits']> this.getAllBenefitsWithCollection(foundNft),
-      contractType: evmNft?.contractType,
-      ownerOf: evmNft?.ownerOf,
+      contractType: 'CEP78',
+      ownerOf: 'asdasdasd',
     };
   }
 
@@ -104,35 +107,30 @@ export class NftService {
       : false;
   }
 
-  public async getNfts(user: Payload, { ...options }: GetNftsDto): Promise<NftDetailDto[]> {
-    const paginatedData = await this.moralisService.getWalletNfts(user.walletAddress, { chain: EvmChain.MUMBAI, ...options });
-    const { result: evmNfts } = paginatedData;
-    const nftConditions = evmNfts.map((evmNft: EvmNftData) => {
-      return {
-        tokenAddress: evmNft.tokenAddress,
-        tokenId: evmNft.tokenId,
-      };
-    });
+  public async getNfts(user: Payload): Promise<NftDetailDto[]> {
+    const nfts = await this.nftModel.find();
 
-    if (_.isEmpty(nftConditions)) {
-      return [];
+    const tokenAddresses = _.uniq(_.map(nfts, 'tokenAddress'));
+
+    let existedNfts = {};
+    for (const tokenAddress of tokenAddresses) {
+      this.casperCep78Service.setContractHash(`hash-${tokenAddress}`);
+      const result = await this.casperCep78Service.getOwnedTokenIds(user.walletAddress);
+      existedNfts = {
+        ...existedNfts,
+        [tokenAddress]: _.map(<any[]>_.get(result, 'data', []), 'data'),
+      };
     }
 
-    const nfts = await this.nftModel.find({ $or: nftConditions });
+    const filteredNfts = nfts.filter((nft: Nft) => {
+      return _.get(existedNfts, `${nft.tokenAddress}[${nft.tokenId}]`, false) === true;
+    });
 
-    const nftDetails = <NftDetailDto[]>nfts.map((nft: Nft & NftDocument) => {
-      const foundEvmNft = evmNfts.find(
-        (evmNft: EvmNftData) =>
-          (<string>(<unknown>evmNft.tokenAddress)).toLowerCase() === nft.tokenAddress.toLowerCase() && evmNft.tokenId === nft.tokenId,
-      );
-      if (!foundEvmNft) {
-        return nft;
-      }
-
+    const nftDetails = <NftDetailDto[]>filteredNfts.map((nft: Nft & NftDocument) => {
       return {
         ..._.omit(nft.toJSON(), ['benefits']),
-        contractType: foundEvmNft.contractType,
-        ownerOf: foundEvmNft.ownerOf,
+        contractType: 'CEP78',
+        ownerOf: 'asdasdasd',
       };
     });
 
@@ -164,11 +162,8 @@ export class NftService {
     };
   }
 
-  public async cliamBenefit(user: Payload, nftId: Types.ObjectId, benefitId: Types.ObjectId): Promise<NftId> {
-    const foundUser = await this.userService.findById(user.userId);
-    if (!foundUser?.isVerifyPhone) {
-      throw new ForbiddenException('user_has_not_permission');
-    }
+  public async claimBenefit(user: Payload, nftId: Types.ObjectId, benefitId: Types.ObjectId): Promise<NftId> {
+    // const foundUser = await this.userService.findById(user.userId);
     const foundNft = await this.nftModel.findById(nftId);
     if (!foundNft) {
       throw new BadRequestException('nft_not_found');
@@ -186,17 +181,17 @@ export class NftService {
       },
     );
 
-    const benefit = await this.benefitService.findById(benefitId);
+    // const benefit = await this.benefitService.findById(benefitId);
 
-    await this.telegramService.sendMessage(`
-    *New Claim Request* 🔥 🔥
-    User: ${foundUser?.phoneNumber}
-    NFT: ${foundNft.name.replace('#', '\\#')}
-    Benefit: ${benefit?.name.replace('#', '\\#')}
-    createdAt: ${moment().format('lll')}
-    👉 [Claim](https://app.mlem.com/admin/dashboard)
-    (${createdClaim._id})
-    `);
+    // await this.telegramService.sendMessage(`
+    // *New Claim Request* 🔥 🔥
+    // User: ${foundUser?.phoneNumber}
+    // NFT: ${foundNft.name.replace('#', '\\#')}
+    // Benefit: ${benefit?.name.replace('#', '\\#')}
+    // createdAt: ${moment().format('lll')}
+    // 👉 [Claim](https://app.mlem.com/admin/dashboard)
+    // (${createdClaim._id})
+    // `);
 
     return {
       id: nftId.toString(),
@@ -206,22 +201,23 @@ export class NftService {
   public async checkOwnedNft(
     userId: Types.ObjectId,
     { tokenAddress, tokenId }: { tokenAddress: string; tokenId: string },
-  ): Promise<{ user: User; evmNft: EvmNftData }> {
+  ): Promise<{ user: User }> {
     const foundUser = await this.userService.findById(userId);
     if (!foundUser) {
       throw new ForbiddenException('user_not_found');
     }
-    const evmNft = await this.moralisService.getNftMetadata(tokenAddress, { chain: EvmChain.MUMBAI, tokenId });
-    if (!evmNft) {
-      throw new BadRequestException('nft_not_found');
-    }
-    if (foundUser?.walletAddress.toLowerCase() !== (<string>(<unknown>evmNft?.ownerOf)).toLowerCase()) {
-      throw new ForbiddenException('require_permission');
+    this.casperCep78Service.setContractHash(
+      `hash-${tokenAddress}`,
+      undefined,
+    );
+    const accountHash = await this.casperCep78Service.getOwnerOf(tokenId);
+    const myAccountHash = this.casperCep78Service.accountHashFromHex(foundUser.walletAddress);
+    if (accountHash !== myAccountHash) {
+      throw new ForbiddenException('nft_not_found');
     }
 
     return {
       user: foundUser,
-      evmNft,
     };
   }
 

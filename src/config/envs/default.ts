@@ -15,7 +15,7 @@ export const config = {
   jwtSecret: 'bdK2PNTSV0A7APnHfOkYXib',
 
   telegram: {
-    token: process.env.TELEGRAM_CHANNEL_TOKEN,
-    channelId: process.env.TELEGRAM_CHANNEL_ID,
+    token: process.env.TELEGRAM_CHANNEL_TOKEN || '',
+    channelId: process.env.TELEGRAM_CHANNEL_ID || '',
   },
 };

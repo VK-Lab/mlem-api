@@ -7,7 +7,6 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import morgan from 'morgan';
-import Moralis  from 'moralis';
 
 import { middleware } from '@/app.middleware';
 import { AppModule } from '@/app.module';
@@ -17,10 +16,6 @@ async function bootstrap(): Promise<string> {
   const isProduction = process.env.NODE_ENV === 'production';
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
-  });
-
-  await Moralis.start({
-    apiKey: process.env.MORALIS_API_KEY,
   });
 
   app.enableVersioning({
