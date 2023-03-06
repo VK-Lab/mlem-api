@@ -8,13 +8,11 @@ import { JwtStrategy } from './strategy';
 
 import { UserModule } from '@/modules/user';
 import { ConfigService } from '@/common';
-import { OtpModule } from '@/modules/otp';
 
 @Module({
   imports: [
     HttpModule,
     UserModule,
-    OtpModule,
     JwtModule.registerAsync({
       useFactory: (config: ConfigService) => ({
         secret: config.get('jwtSecret'),

@@ -19,6 +19,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   public validate(payload: JwtPayload): Partial<Payload> {
-    return { userId: new Types.ObjectId(payload.userId), ..._.pick(payload, ['walletAddress', 'chainId', 'roles']) };
+    return { userId: new Types.ObjectId(payload.userId), ..._.pick(payload, ['walletAddress', 'roles']) };
   }
 }

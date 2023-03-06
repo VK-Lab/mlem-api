@@ -30,11 +30,6 @@ export class NftCollection {
   public campaignId?: Types.ObjectId;
 
   @Prop({
-    required: true,
-  })
-  public chainId!: string;
-
-  @Prop({
     type: [Types.ObjectId],
     default: [],
     ref: 'Benefit',

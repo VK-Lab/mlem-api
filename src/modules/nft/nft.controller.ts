@@ -1,9 +1,8 @@
-import { Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Types } from 'mongoose';
 
 import { NftService } from './nft.service';
-import { GetNftsDto } from './dtos';
 import { Erc721Metadata, NftId } from './interfaces';
 import { Nft } from './schemas';
 import { NftDetailDto } from './dtos/nft-detail.dto';
@@ -14,7 +13,9 @@ import { Payload } from '@/auth';
 @ApiTags('nfts')
 @Controller('nfts')
 export class NftController {
-  constructor(private readonly nftService: NftService) {}
+  constructor(
+    private readonly nftService: NftService,
+  ) {}
 
   @Get('/')
   @HttpCode(HttpStatus.OK)
@@ -22,8 +23,8 @@ export class NftController {
   @ApiOkResponse({
     description: 'Get nfts',
   })
-  public async getNfts(@ReqUser() user: Payload, @Query() getNftsDto: GetNftsDto): Promise<NftDetailDto[]> {
-    return this.nftService.getNfts(user, getNftsDto);
+  public async getNfts(@ReqUser() user: Payload): Promise<NftDetailDto[]> {
+    return this.nftService.getNfts(user);
   }
 
   @Post(':nftId/benefits/:benefitId/claim')
@@ -37,7 +38,7 @@ export class NftController {
       @Param('nftId', ParseObjectId) nftId: Types.ObjectId,
       @Param('benefitId', ParseObjectId) benefitId: Types.ObjectId,
   ): Promise<NftId> {
-    return this.nftService.cliamBenefit(user, nftId, benefitId);
+    return this.nftService.claimBenefit(user, nftId, benefitId);
   }
 
   @Get(':id')

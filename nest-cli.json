@@ -10,11 +10,22 @@
       "compilerOptions": {
         "tsConfigPath": "libs/aws/tsconfig.lib.json"
       }
+    },
+    "casper": {
+      "type": "library",
+      "root": "libs/casper",
+      "entryFile": "index",
+      "sourceRoot": "libs/casper/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/casper/tsconfig.lib.json"
+      }
     }
   },
   "compilerOptions": {
     "webpack": true,
-    "assets": ["templates/**/*"],
+    "assets": [
+      "templates/**/*"
+    ],
     "watchAssets": true
   }
 }

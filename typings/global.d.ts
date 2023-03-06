@@ -42,8 +42,6 @@ export declare global {
 
       MOCK_OWNER_IDS: string;
 
-      MORALIS_API_KEY: string;
-
       SESSION_SECRET: string;
 
       ESMS_API_KEY: string;
@@ -54,6 +52,9 @@ export declare global {
 
       TELEGRAM_CHANNEL_ID: string;
       TELEGRAM_CHANNEL_TOKEN: string;
+
+      NODE_RPC_URL: string;
+      NETWORK_NAME: string;
     }
   }
 
