@@ -44,9 +44,6 @@ export declare global {
 
       SESSION_SECRET: string;
 
-      ESMS_API_KEY: string;
-      ESMS_SECRET_KEY: string;
-
       IS_DEBUGGING_OTP: string;
       IS_DEBUGGING: string;
 
